@@ -13,7 +13,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.PriorityOrdered;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.oauth2.client.filter.OAuth2ClientAuthenticationProcessingFilter;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.web.FilterChainProxy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -25,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+
 /**
  * Development only configuration that is Browsersync-aware and redirects to the origin you clicked "login" from.
  * If you split your application into client and server on separate domains, you might want to enable this for prod
@@ -32,6 +35,8 @@ import java.io.IOException;
  */
 @Configuration
 @Profile("dev")
+@EnableResourceServer
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class OAuth2Configuration {
     public static final String SAVED_LOGIN_ORIGIN_URI = OAuth2Configuration.class.getName() + "_SAVED_ORIGIN";
 

@@ -14,14 +14,18 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.util.matcher.RequestHeaderRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.CorsFilter;
 
 import io.github.jhipster.security.AjaxLogoutSuccessHandler;
 
 @EnableOAuth2Sso
 @EnableWebSecurity
+@EnableResourceServer
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @Configuration
 public class OAuth2SsoConfiguration extends WebSecurityConfigurerAdapter {
@@ -35,6 +39,10 @@ public class OAuth2SsoConfiguration extends WebSecurityConfigurerAdapter {
     @Bean
     public AjaxLogoutSuccessHandler ajaxLogoutSuccessHandler() {
         return new AjaxLogoutSuccessHandler();
+    }
+    @Bean
+    public RequestMatcher resources() {
+        return new RequestHeaderRequestMatcher("Authorization");
     }
 
     @Override
@@ -63,8 +71,10 @@ public class OAuth2SsoConfiguration extends WebSecurityConfigurerAdapter {
             .logoutUrl("/api/logout")
             .logoutSuccessHandler(ajaxLogoutSuccessHandler())
         .and()
+            .requestMatcher(resources())
             .authorizeRequests()
-            .antMatchers("/api/**").authenticated()
+            .antMatchers("/api/**").permitAll()
+            .antMatchers("/*/api/**").permitAll()
             .antMatchers("/management/health").permitAll()
             .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
             .anyRequest().permitAll();
