@@ -2,15 +2,19 @@ package com.lookbug.myapp.config;
 
 import com.lookbug.myapp.security.AuthoritiesConstants;
 
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.autoconfigure.security.oauth2.client.EnableOAuth2Sso;
+import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.security.oauth2.client.OAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
@@ -24,8 +28,9 @@ import org.springframework.web.filter.CorsFilter;
 import io.github.jhipster.security.AjaxLogoutSuccessHandler;
 
 @EnableOAuth2Sso
+//@EnableZuulProxy
 @EnableWebSecurity
-@EnableResourceServer
+//@EnableResourceServer
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @Configuration
 public class OAuth2SsoConfiguration extends WebSecurityConfigurerAdapter {
@@ -40,10 +45,6 @@ public class OAuth2SsoConfiguration extends WebSecurityConfigurerAdapter {
     public AjaxLogoutSuccessHandler ajaxLogoutSuccessHandler() {
         return new AjaxLogoutSuccessHandler();
     }
-    @Bean
-    public RequestMatcher resources() {
-        return new RequestHeaderRequestMatcher("Authorization");
-    }
 
     @Override
     public void configure(WebSecurity web) throws Exception {
@@ -57,27 +58,33 @@ public class OAuth2SsoConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     @Override
+    @Order(3)
     protected void configure(HttpSecurity http) throws Exception {
-        http
-            .csrf()
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            .and()
+        ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry expressionInterceptUrlRegistry = http
+            .csrf().disable()
+//            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+//            .and()
+            //
             .addFilterBefore(corsFilter, CsrfFilter.class)
             .headers()
             .frameOptions()
             .disable()
-        .and()
+            .and()
             .logout()
             .logoutUrl("/api/logout")
             .logoutSuccessHandler(ajaxLogoutSuccessHandler())
-        .and()
-            .requestMatcher(resources())
+            .and()
+
             .authorizeRequests()
+            //.antMatchers(HttpMethod.POST, "/*/api/**").authenticated()
+            //.antMatchers("/*/api/**").permitAll()
+            .antMatchers(HttpMethod.GET, "/*/api/").permitAll()
+            .antMatchers(HttpMethod.POST,"/*/api/**").authenticated()
             .antMatchers("/api/**").permitAll()
-            .antMatchers("/*/api/**").permitAll()
             .antMatchers("/management/health").permitAll()
             .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
             .anyRequest().permitAll();
+        // .anyRequest().access("#oauth2.hasScope('read')");
     }
 
     /**

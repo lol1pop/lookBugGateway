@@ -35,8 +35,6 @@ import java.io.IOException;
  */
 @Configuration
 @Profile("dev")
-@EnableResourceServer
-@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class OAuth2Configuration {
     public static final String SAVED_LOGIN_ORIGIN_URI = OAuth2Configuration.class.getName() + "_SAVED_ORIGIN";
 
