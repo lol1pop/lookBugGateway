@@ -2,6 +2,8 @@ package com.lookbug.myapp.config;
 
 import com.lookbug.myapp.security.AuthoritiesConstants;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.autoconfigure.security.oauth2.client.EnableOAuth2Sso;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
@@ -21,6 +23,7 @@ import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResour
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestHeaderRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.CorsFilter;
@@ -28,12 +31,12 @@ import org.springframework.web.filter.CorsFilter;
 import io.github.jhipster.security.AjaxLogoutSuccessHandler;
 
 @EnableOAuth2Sso
-//@EnableZuulProxy
 @EnableWebSecurity
-//@EnableResourceServer
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @Configuration
+//@Order(100)
 public class OAuth2SsoConfiguration extends WebSecurityConfigurerAdapter {
+
 
     private final CorsFilter corsFilter;
 
@@ -58,33 +61,29 @@ public class OAuth2SsoConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    @Order(3)
+    //@Order(3)
     protected void configure(HttpSecurity http) throws Exception {
         ExpressionUrlAuthorizationConfigurer<HttpSecurity>.ExpressionInterceptUrlRegistry expressionInterceptUrlRegistry = http
-            .csrf().disable()
-//            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-//            .and()
-            //
+            .csrf()//.disable()
+              .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            .and()
             .addFilterBefore(corsFilter, CsrfFilter.class)
             .headers()
             .frameOptions()
             .disable()
             .and()
-            .logout()
-            .logoutUrl("/api/logout")
-            .logoutSuccessHandler(ajaxLogoutSuccessHandler())
+                .logout()
+                .logoutUrl("/api/logout")
+                .logoutSuccessHandler(ajaxLogoutSuccessHandler())
             .and()
-
-            .authorizeRequests()
-            //.antMatchers(HttpMethod.POST, "/*/api/**").authenticated()
-            //.antMatchers("/*/api/**").permitAll()
-            .antMatchers(HttpMethod.GET, "/*/api/").permitAll()
-            .antMatchers(HttpMethod.POST,"/*/api/**").authenticated()
-            .antMatchers("/api/**").permitAll()
-            .antMatchers("/management/health").permitAll()
-            .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
-            .anyRequest().permitAll();
-        // .anyRequest().access("#oauth2.hasScope('read')");
+                //.requestMatcher(new RequestHeaderRequestMatcher("Authorization"))
+                .authorizeRequests()
+                    .antMatchers(HttpMethod.GET, "/*/api/").permitAll()
+                    .antMatchers("/*/api/**").authenticated()
+                    .antMatchers("/api/**").permitAll()
+                    .antMatchers("/management/health").permitAll()
+                    .antMatchers("/management/**").hasAuthority(AuthoritiesConstants.ADMIN)
+                .anyRequest().permitAll();
     }
 
     /**
